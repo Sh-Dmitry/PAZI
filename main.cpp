@@ -9,7 +9,6 @@ std::string b_str =   "13602384";
 std::string x_str =   "44328971593885937857970623207174810055095945000614270339392047863929064377300";
 std::string y_str =   "73987224069968535275377617159869580030126023743076722472100521420353122284142";
 
-// Значения a, d для twisted hessian curve получены с помощью wolfram mathematica
 std::string a_th_str = "8";
 std::string d_th_str = "48";
 
@@ -18,7 +17,6 @@ struct Point{
 
     Point(){
         x = 0;
-
         y = 0;
         z = 0;
     }
@@ -80,7 +78,6 @@ struct params_of_weierstass{
 };
 
 
-
 struct twisted_hessian_curve{
     mpz_class a, d, p;
     Point point;
@@ -127,8 +124,6 @@ struct twisted_hessian_curve{
             res_y = res_y + p;
         }
 
-        //std::cout << "x_th " << res_x << "\n";
-        //std::cout << "y_th " << res_y << "\n";
 
         point.x = res_x;
         point.y = res_y;
@@ -137,9 +132,6 @@ struct twisted_hessian_curve{
 
     Point addition(Point point_1, Point point_2) {
         Point point_3;
-
-
-
         mpz_class A, B, C, D, E, F, X3, Y3, Z3;
         mpz_class res_x, res_y, res_z;
         A = (point_1.x * point_2.z);          //A = X1*Z2
@@ -180,9 +172,7 @@ struct twisted_hessian_curve{
         l_side = l_side % p;
         r_side = r_side % p;
 
-        //std::cout << l_side << "\n";
-        //std::cout << r_side << "\n";
-        if (l_side == r_side){
+                if (l_side == r_side){
 
             return 1;
         }
@@ -212,14 +202,9 @@ struct twisted_hessian_curve{
         number_of_bits = static_cast<int>(mpz_sizeinbase(k.get_mpz_t(), 2));
 
         Q.set("0","-1","1");
-        //Q.show();
-        //std::cout<<number_of_bits;
+
         for (int i = number_of_bits - 1; i>=0 ;--i){
-            //std::cout << i << '\n';
-            //Q.show();
-            //std::cout << "bit is " << mpz_tstbit(k.get_mpz_t(), i) << "\n";
             if (mpz_tstbit(k.get_mpz_t(), i) == 0){
-                //std::cout << 0 << "\n\n";
                 res_point = addition(res_point, Q);
                 Q = addition(Q,Q);
             }
@@ -288,8 +273,7 @@ struct twisted_hessian_curve{
         r_side = d * point_1.x * point_1.y;
         l_side = l_side % p;
         r_side = r_side % p;
-        //std::cout << l_side << "\n";
-        //std::cout << r_side << "\n";
+
         if (l_side == r_side){
 
             return 1;
@@ -313,6 +297,7 @@ struct twisted_hessian_curve{
 
 
 int main()
+
 {
     //
     // tests for parametric
@@ -322,15 +307,17 @@ int main()
 
     params.show();
     params.point.set(x_str, y_str, "1");
-    params.point.show();
+    params.point.show_aff();
 
     std::cout << "TWISTED HESSIAN CURVE\n";
     th_curve.point_to_th(params.point);
     std::cout << "a= " <<th_curve.a << "\n";
     std::cout << "d= " <<th_curve.d << "\n";
     std::cout << "p= " <<th_curve.p << "\n";
+
+/*
     {
-        th_curve.point.show();
+     th_curve.point.show();
 
     std::cout << "(x,y,z) on the curve? " ;
     std::cout << th_curve.check_point(th_curve.point) <<"\n";
@@ -363,6 +350,8 @@ int main()
     std::cout << "[k1 + k2]P: \n";
     point_k3.show();
 }
+*/
+
     //
     // tests for affine
     //
@@ -377,14 +366,6 @@ int main()
 
     std::cout << "(x,y) is on curve? ";
     std::cout << th_curve.check_point_aff(th_curve.point) <<"\n";
-/*
-    std::cout << "q+p: \n";
-    q_p.show_aff();
-    std::cout << "p+q: \n";
-    p_q.show_aff();
-    std::cout << "q+q: \n";
-    q_q.show_aff();
-*/
 
     std::cout << "\n\nTEST_1. Neutral element\n";
     std::cout << "q = (0, -1) is neutral element? ";
@@ -461,6 +442,31 @@ int main()
         std::cout << "false\n";
     }
 
+    std::cout << "\n\nTEST_6. big k. [k1 + k2]P = [k1]P + [k2]P. \n";
+    mpz_class bk1,bk2,bk3, n;
+    Point pbk1, pbk2, pbk3, pbk1_2;
+    n = "10000000000000000000000000000000000000";
+    gmp_randstate_t state;
+    gmp_randinit_mt(state);
+    mpz_urandomm(bk1.get_mpz_t(), state, n.get_mpz_t());
+    mpz_urandomm(bk2.get_mpz_t(), state, n.get_mpz_t());
+    bk3 = bk1 + bk2;
+
+    std::cout << "k1=" << bk1 <<'\n'  ;
+    std::cout << "k2=" << bk2 <<'\n'  ;
+    std::cout << "k3=" << bk3 <<'\n'  ;
+
+    pbk1 = th_curve.crat_aff(bk1);
+    pbk2 = th_curve.crat_aff(bk2);
+    pbk1_2 = th_curve.add_aff(pbk1, pbk2);
+    pbk3 = th_curve.crat_aff(bk3);
+
+    std::cout << "is [k1 + k2]P = [k1]P + [k2]P? ";
+    if (is_equial_aff(pbk1_2, pbk3)){
+        std::cout << "true\n";
+    }else{
+        std::cout << "false\n";
+    }
 
 
     return 0;
