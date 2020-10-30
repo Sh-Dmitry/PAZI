@@ -130,94 +130,6 @@ struct twisted_hessian_curve{
         point.z = 1;
     }
 
-    Point addition(Point point_1, Point point_2) {
-        Point point_3;
-        mpz_class A, B, C, D, E, F, X3, Y3, Z3;
-        mpz_class res_x, res_y, res_z;
-        A = (point_1.x * point_2.z);          //A = X1*Z2
-        B = (point_1.z * point_2.z);          //B = Z1*Z2
-        C = (point_1.y * point_2.x);          //C = Y1*X2
-        D = (point_1.y * point_2.y);          //D = Y1*Y2
-        E = (point_1.z * point_2.y);          //E = Z1*Y2
-        F = (a*point_1.x * point_2.x);        //F = a*X1*X2
-        X3 = A*B - C*D;                     //X3 = A*B-C*D
-        Y3 = D*E - F*A;                     //Y3 = D*E-F*A
-        Z3 = F*C - B*E;                     //Z3 = F*C-B*E
-
-        res_x = X3 % p;
-        res_y = Y3 % p;
-        res_z = Z3 % p;
-
-        if (mpz_sgn (res_x.get_mpz_t()) == -1){
-            res_x = res_x + p;
-        }
-        if (mpz_sgn (res_y.get_mpz_t()) == -1){
-            res_y = res_y + p;
-        }
-        if (mpz_sgn (res_z.get_mpz_t()) == -1){
-            res_z = res_z + p;
-        }
-
-        point_3.x = res_x;
-        point_3.y = res_y;
-        point_3.z = res_z;
-
-        return point_3;
-    }
-
-    int check_point(Point point_1){
-        mpz_class l_side, r_side;
-        l_side = a * (point_1.x * point_1.x * point_1.x) + (point_1.y * point_1.y * point_1.y) + (point_1.z * point_1.z * point_1.z);
-        r_side = d * point_1.x * point_1.y * point_1.z;
-        l_side = l_side % p;
-        r_side = r_side % p;
-
-                if (l_side == r_side){
-
-            return 1;
-        }
-        //std::cout << "false";
-        return 0;
-    }
-
-    Point invert_point(Point point1){
-        Point res_point;
-        mpz_class invert_y;
-
-        mpz_invert(invert_y.get_mpz_t(), point1.y.get_mpz_t(), p.get_mpz_t());
-
-        res_point.x = (point1.x * invert_y) % p;
-        res_point.y = invert_y % p;
-        res_point.z = point1.z;
-
-        return res_point;
-    }
-
-    Point crat(mpz_class k){
-        Point res_point , Q;
-        res_point.x = point.x;
-        res_point.y = point.y;
-        res_point.z = point.z;
-        int number_of_bits;
-        number_of_bits = static_cast<int>(mpz_sizeinbase(k.get_mpz_t(), 2));
-
-        Q.set("0","-1","1");
-
-        for (int i = number_of_bits - 1; i>=0 ;--i){
-            if (mpz_tstbit(k.get_mpz_t(), i) == 0){
-                res_point = addition(res_point, Q);
-                Q = addition(Q,Q);
-            }
-            else{
-                Q = addition(  res_point, Q);
-                res_point = addition(res_point, res_point);
-            }
-        }
-
-
-        return Q;
-    }
-
 
     Point add_aff(Point point1, Point point2){
         Point R;
@@ -314,43 +226,6 @@ int main()
     std::cout << "a= " <<th_curve.a << "\n";
     std::cout << "d= " <<th_curve.d << "\n";
     std::cout << "p= " <<th_curve.p << "\n";
-
-/*
-    {
-     th_curve.point.show();
-
-    std::cout << "(x,y,z) on the curve? " ;
-    std::cout << th_curve.check_point(th_curve.point) <<"\n";
-
-    mpz_class k; Point point_kp;
-    k = "115792089237316195423570985008687907853279740477758714817704293727807715164245";
-    point_kp = th_curve.crat(k);
-    std::cout << "k=" << k <<'\n' << "result_of_kp:\n" ;
-    point_kp.show();
-    std::cout << "kp is on curve? ";
-    std::cout << th_curve.check_point(point_kp) <<"\n";
-
-    mpz_class k1,k2,k3; k1= 3; k2 = 5; k3 =k1+k2;
-    Point point_k1, point_k2, point_k3, point_k12;
-    std::cout << "k1=" << k1 <<'\n'  ;
-    std::cout << "k2=" << k2 <<'\n'  ;
-    std::cout << "k3=" << k3 <<'\n'  ;
-
-    point_k1 = th_curve.crat(k1);
-    point_k2 = th_curve.crat(k2);
-    point_k12 = th_curve.addition(point_k1, point_k2);
-    std::cout << "k12 is on curve? ";
-    std::cout << th_curve.check_point(point_k12) <<"\n";
-    std::cout << "[k1]P + [k2]P: \n";
-    point_k12.show();
-
-    point_k3 = th_curve.crat(k3);
-    std::cout << "k3 is on curve? ";
-    std::cout << th_curve.check_point(point_k3) <<"\n";
-    std::cout << "[k1 + k2]P: \n";
-    point_k3.show();
-}
-*/
 
     //
     // tests for affine
